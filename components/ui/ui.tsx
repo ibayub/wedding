@@ -1,11 +1,16 @@
 import React, { forwardRef } from 'react';
 
 // Button Component
-export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) => {
+export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, disabled, ...props }) => {
   return (
     <button 
       {...props} 
-      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      disabled={disabled}
+      className={`${
+        disabled 
+        ? 'bg-gray-300 cursor-not-allowed'  // Disabled state
+        : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500'  // Gradient background when enabled
+      } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
     >
       {children}
     </button>
@@ -89,3 +94,13 @@ export const DialogContent: React.FC<{ children: React.ReactNode }> = ({ childre
 export const DialogDescription: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <p className="text-gray-600 mb-4">{children}</p>;
 };
+
+// Loader Component
+export const Loader = () => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+    </div>
+  );
+};
+

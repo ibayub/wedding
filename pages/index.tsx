@@ -1,21 +1,32 @@
 import { useState, useEffect, useRef } from "react";
 import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTitle, Separator, Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from "@/components/ui/ui";
 
+// Loader Component
+const Loader = () => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+    </div>
+  );
+};
+
 export default function Component() {
   const [name, setName] = useState("");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTable, setIsLoadingTable] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // For showing the success popup
-  const fileInputRef = useRef<HTMLInputElement>(null); // To clear file input
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // NEW state for tracking upload status
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch names for suggestions
   useEffect(() => {
     async function fetchNames() {
       try {
-        const response = await fetch('/api/getNames'); // Adjust this to your API endpoint
+        const response = await fetch('/api/getNames');
         const data = await response.json();
         setSuggestions(data.names || []);
       } catch (err) {
@@ -30,7 +41,6 @@ export default function Component() {
     const userInput = e.target.value;
     setName(userInput);
 
-    // Show suggestions if input length is 3 or more characters
     if (userInput.length >= 3 && suggestions.length > 0) {
       const filtered = suggestions.filter((suggestion) =>
         suggestion.toLowerCase().startsWith(userInput.toLowerCase())
@@ -44,6 +54,13 @@ export default function Component() {
     setError(null);
   };
 
+  const handleClearName = () => {
+    setName("");
+    setFilteredSuggestions([]);
+    setTableNumber(null);
+    setError(null);
+  };
+
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() === "") {
@@ -51,7 +68,7 @@ export default function Component() {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingTable(true);
     setError(null);
 
     try {
@@ -67,32 +84,35 @@ export default function Component() {
       console.error('Error fetching table number:', err);
       setError("An error occurred while fetching your table number. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsLoadingTable(false);
     }
   };
 
-  // When a user selects a name from the dropdown
   const handleSuggestionClick = (suggestion: string) => {
     setName(suggestion);
-    setFilteredSuggestions([]); // Hide the dropdown by clearing filtered suggestions
+    setFilteredSuggestions([]);
   };
 
+  // Handle photo uploads
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setPhotos(Array.from(e.target.files));
     }
   };
 
+  // Handle photo submission with loader
   const handlePhotoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (photos.length === 0) return;
 
+    setIsUploading(true);  // Show the loader when upload starts
+
     try {
       const uploadPromises = photos.map(async (photo) => {
         const formData = new FormData();
         formData.append('file', photo);
-        formData.append('upload_preset', 'wedding_uploads'); // Cloudinary upload preset
+        formData.append('upload_preset', 'wedding_uploads');
 
         const res = await fetch('https://api.cloudinary.com/v1_1/movig/image/upload', {
           method: 'POST',
@@ -110,14 +130,19 @@ export default function Component() {
         fileInputRef.current.value = "";
       }
 
-      setIsDialogOpen(true);
+      setIsDialogOpen(true);  // Show success dialog after upload
     } catch (err) {
       console.error("Error uploading to Cloudinary:", err);
+    } finally {
+      setIsUploading(false);  // Hide the loader when done
     }
   };
 
   return (
     <div className="min-h-screen h-screen bg-custom-image bg-cover bg-center flex items-center justify-center p-4">
+      {/* Show loader if uploading */}
+      {isUploading && <Loader />}
+
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img src="/header.jpg" alt="Wedding Header" className="w-full h-32 object-cover object-bottom mb-4" />
@@ -126,24 +151,36 @@ export default function Component() {
         <CardContent className="space-y-6">
           <div>
             <h2 className="text-xl font-semibold mb-4 text-center">Find my Table</h2>
-            <form onSubmit={handleNameSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleNameSubmit} className="space-y-4 relative">
+              <div className="space-y-2 relative">
                 <Label htmlFor="name">Your Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Start typing your name"
-                  value={name}
-                  onChange={handleNameChange}
-                  disabled={isLoading}
-                  autoComplete="off"
-                />
+                <div className="relative">
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Start typing your name"
+                    value={name}
+                    onChange={handleNameChange}
+                    disabled={isLoadingTable}
+                    autoComplete="off"
+                    className="w-full pr-10"
+                  />
+                  {name && (
+                    <button
+                      type="button"
+                      onClick={handleClearName}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-1 w-6 h-6 flex items-center justify-center"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 {filteredSuggestions.length > 0 && (
                   <ul className="border rounded bg-white max-h-40 overflow-y-auto">
                     {filteredSuggestions.map((suggestion, index) => (
                       <li
                         key={index}
-                        onClick={() => handleSuggestionClick(suggestion)} // On click, set the name and hide the suggestions
+                        onClick={() => handleSuggestionClick(suggestion)}
                         className="p-2 hover:bg-gray-200 cursor-pointer"
                       >
                         {suggestion}
@@ -152,8 +189,12 @@ export default function Component() {
                   </ul>
                 )}
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Finding Table..." : "Find Table"}
+              <Button
+                type="submit"
+                className={`w-full ${!name ? 'bg-gray-300' : 'bg-blue-500 hover:bg-blue-600'}`}
+                disabled={!name || isLoadingTable}
+              >
+                {isLoadingTable ? "Finding Table..." : "Find Table"}
               </Button>
             </form>
           </div>
@@ -204,7 +245,11 @@ export default function Component() {
                   </div>
                 </div>
               )}
-              <Button type="submit" className="w-full" disabled={photos.length === 0}>
+              <Button
+                type="submit"
+                className={`w-full ${photos.length === 0 ? 'bg-gray-300' : 'bg-purple-500 hover:bg-purple-600'}`}
+                disabled={photos.length === 0}
+              >
                 Submit Photos
               </Button>
             </form>
