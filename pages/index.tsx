@@ -91,7 +91,7 @@ export default function Component() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Enter your name"
+                  placeholder="Type your name here"
                   value={name}
                   onChange={handleNameChange}
                   disabled={isLoading}
@@ -119,7 +119,7 @@ export default function Component() {
 
           {tableNumber && (
             <div className="text-center p-4 bg-green-100 rounded-md">
-              <p className="font-semibold">Welcome, {name}!</p>
+              <p className="font-semibold">Welcome {name}!</p>
               <p className="text-sm text-gray-700">Your table number is: {tableNumber}</p>
             </div>
           )}
@@ -130,7 +130,7 @@ export default function Component() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="text-center text-sm text-gray-500">Share your wedding memories</CardFooter>
+        <CardFooter className="text-center text-sm text-gray-500">Made with love (& coffee) by Ibrahim</CardFooter>
       </Card>
     </div>
   );
