@@ -4,19 +4,17 @@ import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTi
 export default function Component() {
   const [name, setName] = useState("");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]); // Initialize with an empty array
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch names from the new API route
   useEffect(() => {
     async function fetchNames() {
       try {
-        const response = await fetch('/api/getNames'); // New API endpoint for names
+        const response = await fetch('/api/getNames'); // Adjust this to your API endpoint
         const data = await response.json();
-        console.log("Fetched names:", data.names); // Log fetched names for debugging
-        setSuggestions(data.names || []); // Set the suggestions (names)
+        setSuggestions(data.names || []);
       } catch (err) {
         console.error('Error fetching names:', err);
       }
@@ -25,19 +23,17 @@ export default function Component() {
     fetchNames();
   }, []);
 
-  // Handle input change and filter suggestions after 3 characters are typed
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const userInput = e.target.value;
     setName(userInput);
 
-    // Trigger filtering only after 3 characters
     if (userInput.length >= 3 && suggestions.length > 0) {
       const filtered = suggestions.filter((suggestion) =>
         suggestion.toLowerCase().startsWith(userInput.toLowerCase())
       );
       setFilteredSuggestions(filtered);
     } else {
-      setFilteredSuggestions([]); // Clear suggestions if less than 3 characters
+      setFilteredSuggestions([]);
     }
 
     setTableNumber(null);
@@ -73,13 +69,19 @@ export default function Component() {
 
   const handleSuggestionClick = (suggestion: string) => {
     setName(suggestion); // Set the full name when a suggestion is clicked
-    setFilteredSuggestions([]); // Clear suggestions after a selection
+    setFilteredSuggestions([]);
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-custom-image flex items-center justify-center p-4">
+    <div className="min-h-screen h-screen bg-custom-image bg-cover bg-center flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
+          {/* Updated the image to show the bottom part and crop from the top */}
+          <img 
+            src="/header.jpg" 
+            alt="Wedding Header" 
+            className="w-full h-32 object-cover object-bottom mb-4" 
+          />
           <CardTitle className="text-2xl font-bold text-center">Neishay & Hussain Wedding</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -91,7 +93,7 @@ export default function Component() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Type your name here"
+                  placeholder="Start typing your name" // Updated placeholder text
                   value={name}
                   onChange={handleNameChange}
                   disabled={isLoading}
@@ -119,7 +121,7 @@ export default function Component() {
 
           {tableNumber && (
             <div className="text-center p-4 bg-green-100 rounded-md">
-              <p className="font-semibold">Welcome {name}!</p>
+              <p className="font-semibold">Welcome, {name}!</p>
               <p className="text-sm text-gray-700">Your table number is: {tableNumber}</p>
             </div>
           )}
@@ -130,7 +132,9 @@ export default function Component() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="text-center text-sm text-gray-500">Made with love (& coffee) by Ibrahim</CardFooter>
+        <CardFooter className="text-center text-sm text-gray-500">
+          Made with ❤️ and ☕ by Ibrahim
+        </CardFooter>
       </Card>
     </div>
   );
