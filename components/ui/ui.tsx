@@ -36,20 +36,20 @@ export const Card: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: R
   return <div className={`rounded overflow-hidden shadow-lg bg-white p-6 ${className}`} {...props}>{children}</div>;
 };
 
-export const CardHeader: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="font-bold text-xl mb-4">{children}</div>;
+export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+  return <div className={`font-bold text-xl mb-4 ${className}`} {...props}>{children}</div>;
 };
 
-export const CardTitle: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <h2 className="text-2xl font-bold mb-4">{children}</h2>;
+export const CardTitle: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+  return <h2 className={`text-2xl font-bold mb-4 ${className}`} {...props}>{children}</h2>;
 };
 
-export const CardContent: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="text-gray-700 text-base">{children}</div>;
+export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+  return <div className={`text-gray-700 text-base ${className}`} {...props}>{children}</div>;
 };
 
-export const CardFooter: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="mt-4">{children}</div>;
+export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+  return <div className={`mt-4 ${className}`} {...props}>{children}</div>;
 };
 
 // Separator Component
@@ -62,25 +62,4 @@ export const Dialog: React.FC<{ isOpen: boolean; onClose: () => void; children: 
   return (
     isOpen && (
       <div className="fixed inset-0 flex items-center justify-center z-50">
-        <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
-        <div className="bg-white p-6 rounded-lg shadow-lg z-10">{children}</div>
-      </div>
-    )
-  );
-};
-
-export const DialogHeader: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="text-lg font-bold mb-4">{children}</div>;
-};
-
-export const DialogTitle: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <h3 className="text-2xl font-bold mb-4">{children}</h3>;
-};
-
-export const DialogContent: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="text-base mb-4">{children}</div>;
-};
-
-export const DialogDescription: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <p className="text-gray-600 mb-4">{children}</p>;
-};
+        <div className="fixed inset-0 bg-black
