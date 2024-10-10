@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { forwardRef } from 'react';
 
 // Button Component
 export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) => {
@@ -12,15 +12,20 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = (
   );
 };
 
-// Input Component
-export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => {
-  return (
-    <input 
-      {...props} 
-      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-    />
-  );
-};
+// Input Component with forwardRef to handle ref
+export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ ...props }, ref) => {
+    return (
+      <input
+        ref={ref}
+        {...props}
+        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+      />
+    );
+  }
+);
+
+Input.displayName = 'Input'; // Setting a display name for debugging
 
 // Label Component
 export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ children, ...props }) => {
@@ -32,23 +37,23 @@ export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ c
 };
 
 // Card Component (with Header, Content, Footer)
-export const Card: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+export const Card: React.FC<{ children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return <div className={`rounded overflow-hidden shadow-lg bg-white p-6 ${className}`} {...props}>{children}</div>;
 };
 
-export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+export const CardHeader: React.FC<{ children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return <div className={`font-bold text-xl mb-4 ${className}`} {...props}>{children}</div>;
 };
 
-export const CardTitle: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+export const CardTitle: React.FC<{ children: React.ReactNode } & React.HTMLAttributes<HTMLHeadingElement>> = ({ children, className, ...props }) => {
   return <h2 className={`text-2xl font-bold mb-4 ${className}`} {...props}>{children}</h2>;
 };
 
-export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+export const CardContent: React.FC<{ children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return <div className={`text-gray-700 text-base ${className}`} {...props}>{children}</div>;
 };
 
-export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+export const CardFooter: React.FC<{ children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return <div className={`mt-4 ${className}`} {...props}>{children}</div>;
 };
 
@@ -58,31 +63,29 @@ export const Separator: React.FC = () => {
 };
 
 // Dialog Component (with Header, Title, Content, and Description)
-export const Dialog: React.FC<{ isOpen: boolean; onClose: () => void; children: ReactNode }> = ({ isOpen, onClose, children }) => {
+export const Dialog: React.FC<{ isOpen: boolean, onClose: () => void, children: React.ReactNode }> = ({ isOpen, onClose, children }) => {
   return (
     isOpen && (
       <div className="fixed inset-0 flex items-center justify-center z-50">
         <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
-        <div className="bg-white p-6 rounded-lg shadow-lg z-10">
-          {children}
-        </div>
+        <div className="bg-white p-6 rounded-lg shadow-lg z-10">{children}</div>
       </div>
     )
   );
 };
 
-export const DialogHeader: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
-  return <div className={`text-lg font-bold mb-4 ${className}`} {...props}>{children}</div>;
+export const DialogHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <div className="text-lg font-bold mb-4">{children}</div>;
 };
 
-export const DialogTitle: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
-  return <h3 className={`text-2xl font-bold mb-4 ${className}`} {...props}>{children}</h3>;
+export const DialogTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <h3 className="text-2xl font-bold mb-4">{children}</h3>;
 };
 
-export const DialogContent: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
-  return <div className={`text-base mb-4 ${className}`} {...props}>{children}</div>;
+export const DialogContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <div className="text-base mb-4">{children}</div>;
 };
 
-export const DialogDescription: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
-  return <p className={`text-gray-600 mb-4 ${className}`} {...props}>{children}</p>;
+export const DialogDescription: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <p className="text-gray-600 mb-4">{children}</p>;
 };

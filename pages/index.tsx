@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/ui";
+import { useState, useEffect, useRef } from "react";
+import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTitle, Separator, Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from "@/components/ui/ui";
 
 export default function Component() {
   const [name, setName] = useState("");
@@ -8,11 +8,14 @@ export default function Component() {
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null); // To clear file input
 
   useEffect(() => {
     async function fetchNames() {
       try {
-        const response = await fetch('/api/getNames'); // Adjust this to your API endpoint
+        const response = await fetch('/api/getNames');
         const data = await response.json();
         setSuggestions(data.names || []);
       } catch (err) {
@@ -67,21 +70,50 @@ export default function Component() {
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setName(suggestion); // Set the full name when a suggestion is clicked
-    setFilteredSuggestions([]);
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setPhotos(Array.from(e.target.files));
+    }
+  };
+
+  const handlePhotoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (photos.length === 0) return;
+
+    try {
+      const uploadPromises = photos.map(async (photo) => {
+        const formData = new FormData();
+        formData.append('file', photo);
+        formData.append('upload_preset', 'wedding_uploads');
+
+        const res = await fetch('https://api.cloudinary.com/v1_1/movig/image/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        return res.json();
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+      console.log("All Cloudinary responses", uploadedFiles);
+
+      setPhotos([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      setIsDialogOpen(true);
+    } catch (err) {
+      console.error("Error uploading to Cloudinary:", err);
+    }
   };
 
   return (
     <div className="min-h-screen h-screen bg-custom-image bg-cover bg-center flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          {/* Updated the image to show the bottom part and crop from the top */}
-          <img 
-            src="/header.jpg" 
-            alt="Wedding Header" 
-            className="w-full h-32 object-cover object-bottom mb-4" 
-          />
+          <img src="/header.jpg" alt="Wedding Header" className="w-full h-32 object-cover object-bottom mb-4" />
           <CardTitle className="text-2xl font-bold text-center">Neishay & Hussain Wedding</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -93,7 +125,7 @@ export default function Component() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Start typing your name" // Updated placeholder text
+                  placeholder="Start typing your name"
                   value={name}
                   onChange={handleNameChange}
                   disabled={isLoading}
@@ -104,7 +136,7 @@ export default function Component() {
                     {filteredSuggestions.map((suggestion, index) => (
                       <li
                         key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
+                        onClick={() => setName(suggestion)}
                         className="p-2 hover:bg-gray-200 cursor-pointer"
                       >
                         {suggestion}
@@ -131,11 +163,59 @@ export default function Component() {
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
+
+          <Separator />
+
+          <div>
+            <h2 className="text-xl font-semibold mb-4 text-center">Share your Photos!</h2>
+            <form onSubmit={handlePhotoSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="photos">Upload Photos</Label>
+                <Input
+                  id="photos"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  ref={fileInputRef}
+                  required
+                />
+              </div>
+              {photos.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold mb-2">Photo Preview</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {photos.map((photo, index) => (
+                      <img
+                        key={index}
+                        src={URL.createObjectURL(photo)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={photos.length === 0}>
+                Submit Photos
+              </Button>
+            </form>
+          </div>
         </CardContent>
         <CardFooter className="text-center text-sm text-gray-500">
           Made with ❤️ and ☕ by Ibrahim
         </CardFooter>
       </Card>
+
+      <Dialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Photos Uploaded Successfully</DialogTitle>
+            <DialogDescription>Your photos have been uploaded. Thank you for sharing!</DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
