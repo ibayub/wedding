@@ -1,21 +1,16 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2761
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+import { google } from 'googleapis';
 
-\f0\fs24 \cf0 import \{ google \} from 'googleapis';\
-import \{ readFileSync \} from 'fs';\
-import path from 'path';\
-\
-const keyFilePath = path.join(process.cwd(), 'weddingapp-438121-0f54399d0416.json');\
-const keyFile = JSON.parse(readFileSync(keyFilePath, 'utf8'));\
-\
-export const getAuthClient = () => \{\
-  return new google.auth.GoogleAuth(\{\
-    credentials: keyFile,\
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],\
-  \});\
-\};\
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+
+export function getGoogleAuth() {
+  const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS || '{}');
+
+  const client = new google.auth.JWT(
+    credentials.client_email,
+    undefined,
+    credentials.private_key,
+    SCOPES
+  );
+
+  return client;
 }
