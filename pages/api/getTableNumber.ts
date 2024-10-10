@@ -4,55 +4,65 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 // Load credentials from environment variables
 const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS || '{}');
 
+// Google Sheets ID and Range (using environment variables)
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '';
+const RANGE = 'Tables!A:B'; // Fetches names and table numbers from column A and B
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('API route called with query:', req.query);
-
-  if (req.method !== 'GET') {
-    console.log('Method not allowed:', req.method);
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { name } = req.query;
-
-  if (!name || typeof name !== 'string') {
-    console.log('Invalid name parameter:', name);
-    return res.status(400).json({ message: 'Name is required and must be a string' });
-  }
-
   try {
-    console.log('Initializing Google Auth');
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-    });
+    const client = new google.auth.JWT(
+      credentials.client_email,
+      null,
+      credentials.private_key,
+      ['https://www.googleapis.com/auth/spreadsheets.readonly']
+    );
 
-    console.log('Initializing Google Sheets');
-    const sheets = google.sheets({ version: 'v4', auth });
+    await client.authorize();
 
-    console.log('Fetching data from Google Sheets');
+    const sheets = google.sheets({ version: 'v4', auth: client });
+
+    // Fetch column A (names) and column B (table numbers)
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID, // Updated to use environment variable
-      range: 'Tables!A:B',
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
     });
 
-    console.log('Data fetched successfully');
     const rows = response.data.values;
-    if (rows) {
-      console.log('Searching for matching name');
-      const matchingRow = rows.find(row => row[0].toLowerCase() === name.toLowerCase());
-      if (matchingRow) {
-        console.log('Match found:', matchingRow);
-        return res.status(200).json({ tableNumber: matchingRow[1] });
-      } else {
-        console.log('No match found for name:', name);
-        return res.status(404).json({ message: 'Name not found in the guest list' });
-      }
-    } else {
-      console.log('No data found in the spreadsheet');
+
+    if (!rows || rows.length === 0) {
       return res.status(404).json({ message: 'No data found in the spreadsheet' });
     }
+
+    // Skip the header row (assumes first row is the header)
+    const dataRows = rows.slice(1);
+
+    const { name } = req.query;
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ message: 'Invalid or missing name parameter' });
+    }
+
+    const loweredName = name.toLowerCase();
+
+    // Log all available names for debugging (skipping the header row)
+    console.log("Available names:", dataRows.map(row => row[0]));
+
+    // Perform exact matching with safety checks
+    const result = dataRows.find(row => {
+      // Ensure the row exists, has a valid name (row[0]), and is not empty
+      if (row && row[0] && typeof row[0] === 'string') {
+        return row[0].toLowerCase() === loweredName;
+      }
+      return false; // Skip rows without a valid name
+    });
+
+    if (result) {
+      return res.status(200).json({ tableNumber: result[1] || 'No table number found' });
+    } else {
+      console.log('No match found for name:', name);
+      return res.status(404).json({ message: `No table number found for ${name}` });
+    }
   } catch (error) {
-    console.error('Error in API route:', error);
-    return res.status(500).json({ message: 'Error fetching data from Google Sheets', error: error.message });
+    console.error('Error fetching data from Google Sheets:', error);
+    return res.status(500).json({ error: 'Failed to fetch data from Google Sheets' });
   }
 }

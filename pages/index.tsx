@@ -1,116 +1,90 @@
-"use client"
-
-import { useState, useRef, useCallback, forwardRef } from "react";
-import {
-  Button,
-  Input,
-  Label,
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  Separator,
-  Dialog,
-  DialogHeader,
-  DialogTitle,
-  DialogContent,
-  DialogDescription,
-} from "@/components/ui/ui";
-
-// Forward Ref for Input Component to support file input ref
-export const ForwardedInput = forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement>
->((props, ref) => (
-  <input
-    ref={ref}
-    {...props}
-    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-  />
-));
-
-ForwardedInput.displayName = "ForwardedInput";
+import { useState, useEffect } from "react";
+import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/ui";
 
 export default function Component() {
   const [name, setName] = useState("");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<File[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]); // Initialize with an empty array
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch names from the new API route
+  useEffect(() => {
+    async function fetchNames() {
+      try {
+        const response = await fetch('/api/getNames'); // New API endpoint for names
+        const data = await response.json();
+        console.log("Fetched names:", data.names); // Log fetched names for debugging
+        setSuggestions(data.names || []); // Set the suggestions (names)
+      } catch (err) {
+        console.error('Error fetching names:', err);
+      }
+    }
+
+    fetchNames();
+  }, []);
+
+  // Handle input change and filter suggestions after 3 characters are typed
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
+    const userInput = e.target.value;
+    setName(userInput);
+
+    // Trigger filtering only after 3 characters
+    if (userInput.length >= 3 && suggestions.length > 0) {
+      const filtered = suggestions.filter((suggestion) =>
+        suggestion.toLowerCase().startsWith(userInput.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+    } else {
+      setFilteredSuggestions([]); // Clear suggestions if less than 3 characters
+    }
+
     setTableNumber(null);
     setError(null);
   };
 
-  const handleNameSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (name.trim() === "") {
-        setTableNumber(null);
-        return;
+  const handleNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim() === "") {
+      setTableNumber(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/getTableNumber?name=${encodeURIComponent(name)}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setTableNumber(data.tableNumber);
+      } else {
+        setError(data.message || "An error occurred while fetching your table number.");
       }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(
-          `/api/getTableNumber?name=${encodeURIComponent(name)}`
-        );
-        const data = await response.json();
-
-        if (response.ok) {
-          setTableNumber(data.tableNumber);
-        } else {
-          setError(
-            data.message ||
-              "An error occurred while fetching your table number."
-          );
-        }
-      } catch (err) {
-        setError(
-          "An error occurred while fetching your table number. Please try again."
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [name]
-  );
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setPhotos(Array.from(e.target.files));
+    } catch (err) {
+      console.error('Error fetching table number:', err);
+      setError("An error occurred while fetching your table number. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePhotoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsDialogOpen(true);
-    setPhotos([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleSuggestionClick = (suggestion: string) => {
+    setName(suggestion); // Set the full name when a suggestion is clicked
+    setFilteredSuggestions([]); // Clear suggestions after a selection
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-cover bg-center bg-custom-image flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Neishay & Hussain Wedding
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Neishay & Hussain Wedding</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Find my Table
-            </h2>
+            <h2 className="text-xl font-semibold mb-4 text-center">Find my Table</h2>
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Your Name</Label>
@@ -121,7 +95,21 @@ export default function Component() {
                   value={name}
                   onChange={handleNameChange}
                   disabled={isLoading}
+                  autoComplete="off"
                 />
+                {filteredSuggestions.length > 0 && (
+                  <ul className="border rounded bg-white max-h-40 overflow-y-auto">
+                    {filteredSuggestions.map((suggestion, index) => (
+                      <li
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Finding Table..." : "Find Table"}
@@ -132,9 +120,7 @@ export default function Component() {
           {tableNumber && (
             <div className="text-center p-4 bg-green-100 rounded-md">
               <p className="font-semibold">Welcome, {name}!</p>
-              <p className="text-sm text-gray-700">
-                Your table number is: {tableNumber}
-              </p>
+              <p className="text-sm text-gray-700">Your table number is: {tableNumber}</p>
             </div>
           )}
 
@@ -143,68 +129,9 @@ export default function Component() {
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
-
-          <Separator />
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Share your Photos!
-            </h2>
-            <form onSubmit={handlePhotoSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="photos">Upload Photos</Label>
-                <ForwardedInput
-                  id="photos"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handlePhotoUpload}
-                  ref={fileInputRef}
-                  required
-                />
-              </div>
-              {photos.length > 0 && (
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold mb-2">Photo Preview</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {photos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={URL.createObjectURL(photo)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={photos.length === 0}
-              >
-                Submit Photos
-              </Button>
-            </form>
-          </div>
         </CardContent>
-        <CardFooter className="text-center text-sm text-gray-500">
-          Share your wedding memories
-        </CardFooter>
+        <CardFooter className="text-center text-sm text-gray-500">Share your wedding memories</CardFooter>
       </Card>
-
-      <Dialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Photos Uploaded Successfully</DialogTitle>
-            <DialogDescription>
-              Your photos have been uploaded. Thank you for sharing your wedding
-              memories!
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
