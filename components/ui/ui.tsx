@@ -32,8 +32,8 @@ export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ c
 };
 
 // Card Component (with Header, Content, Footer)
-export const Card: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <div className="rounded overflow-hidden shadow-lg bg-white p-6">{children}</div>;
+export const Card: React.FC<React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }> = ({ children, className, ...props }) => {
+  return <div className={`rounded overflow-hidden shadow-lg bg-white p-6 ${className}`} {...props}>{children}</div>;
 };
 
 export const CardHeader: React.FC<{ children: ReactNode }> = ({ children }) => {
