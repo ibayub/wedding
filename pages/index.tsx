@@ -9,13 +9,13 @@ export default function Component() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // For showing the success popup
   const fileInputRef = useRef<HTMLInputElement>(null); // To clear file input
 
   useEffect(() => {
     async function fetchNames() {
       try {
-        const response = await fetch('/api/getNames');
+        const response = await fetch('/api/getNames'); // Adjust this to your API endpoint
         const data = await response.json();
         setSuggestions(data.names || []);
       } catch (err) {
@@ -30,6 +30,7 @@ export default function Component() {
     const userInput = e.target.value;
     setName(userInput);
 
+    // Show suggestions if input length is 3 or more characters
     if (userInput.length >= 3 && suggestions.length > 0) {
       const filtered = suggestions.filter((suggestion) =>
         suggestion.toLowerCase().startsWith(userInput.toLowerCase())
@@ -70,6 +71,12 @@ export default function Component() {
     }
   };
 
+  // When a user selects a name from the dropdown
+  const handleSuggestionClick = (suggestion: string) => {
+    setName(suggestion);
+    setFilteredSuggestions([]); // Hide the dropdown by clearing filtered suggestions
+  };
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setPhotos(Array.from(e.target.files));
@@ -85,7 +92,7 @@ export default function Component() {
       const uploadPromises = photos.map(async (photo) => {
         const formData = new FormData();
         formData.append('file', photo);
-        formData.append('upload_preset', 'wedding_uploads');
+        formData.append('upload_preset', 'wedding_uploads'); // Cloudinary upload preset
 
         const res = await fetch('https://api.cloudinary.com/v1_1/movig/image/upload', {
           method: 'POST',
@@ -136,7 +143,7 @@ export default function Component() {
                     {filteredSuggestions.map((suggestion, index) => (
                       <li
                         key={index}
-                        onClick={() => setName(suggestion)}
+                        onClick={() => handleSuggestionClick(suggestion)} // On click, set the name and hide the suggestions
                         className="p-2 hover:bg-gray-200 cursor-pointer"
                       >
                         {suggestion}
@@ -166,6 +173,7 @@ export default function Component() {
 
           <Separator />
 
+          {/* Photo upload form */}
           <div>
             <h2 className="text-xl font-semibold mb-4 text-center">Share your Photos!</h2>
             <form onSubmit={handlePhotoSubmit} className="space-y-4">
