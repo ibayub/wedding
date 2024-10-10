@@ -1,79 +1,116 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
-import { Button, Input, Label, Card, CardContent, CardFooter, CardHeader, CardTitle, Separator, Dialog, DialogHeader, DialogTitle, DialogContent, DialogDescription } from "@/components/ui/ui";
+import { useState, useRef, useCallback, forwardRef } from "react";
+import {
+  Button,
+  Input,
+  Label,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Separator,
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogContent,
+  DialogDescription,
+} from "@/components/ui/ui";
+
+// Forward Ref for Input Component to support file input ref
+export const ForwardedInput = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>((props, ref) => (
+  <input
+    ref={ref}
+    {...props}
+    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+  />
+));
+
+ForwardedInput.displayName = "ForwardedInput";
 
 export default function Component() {
-  const [name, setName] = useState("")
-  const [tableNumber, setTableNumber] = useState<string | null>(null)
-  const [photos, setPhotos] = useState<File[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [name, setName] = useState("");
+  const [tableNumber, setTableNumber] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value)
-    setTableNumber(null)
-    setError(null)
-  }
+    setName(e.target.value);
+    setTableNumber(null);
+    setError(null);
+  };
 
-  const handleNameSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (name.trim() === "") {
-      setTableNumber(null)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      console.log('Fetching table number for:', name);
-      const response = await fetch(`/api/getTableNumber?name=${encodeURIComponent(name)}`)
-      const data = await response.json()
-
-      console.log('API response:', response.status, data);
-
-      if (response.ok) {
-        setTableNumber(data.tableNumber)
-      } else {
-        setError(data.message || "An error occurred while fetching your table number.")
+  const handleNameSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (name.trim() === "") {
+        setTableNumber(null);
+        return;
       }
-    } catch (err) {
-      console.error('Error fetching table number:', err)
-      setError("An error occurred while fetching your table number. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [name])
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `/api/getTableNumber?name=${encodeURIComponent(name)}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setTableNumber(data.tableNumber);
+        } else {
+          setError(
+            data.message ||
+              "An error occurred while fetching your table number."
+          );
+        }
+      } catch (err) {
+        setError(
+          "An error occurred while fetching your table number. Please try again."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [name]
+  );
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setPhotos(Array.from(e.target.files))
+      setPhotos(Array.from(e.target.files));
     }
-  }
+  };
 
   const handlePhotoSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Photos submitted:", photos)
-    setIsDialogOpen(true)
-    // Reset photo form after submission
-    setPhotos([])
+    e.preventDefault();
+    setIsDialogOpen(true);
+    setPhotos([]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Neishay & Hussain Wedding</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Neishay & Hussain Wedding
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-center">Find my Table</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Find my Table
+            </h2>
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Your Name</Label>
@@ -95,7 +132,9 @@ export default function Component() {
           {tableNumber && (
             <div className="text-center p-4 bg-green-100 rounded-md">
               <p className="font-semibold">Welcome, {name}!</p>
-              <p className="text-sm text-gray-700">Your table number is: {tableNumber}</p>
+              <p className="text-sm text-gray-700">
+                Your table number is: {tableNumber}
+              </p>
             </div>
           )}
 
@@ -108,11 +147,13 @@ export default function Component() {
           <Separator />
 
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-center">Share your Photos!</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Share your Photos!
+            </h2>
             <form onSubmit={handlePhotoSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="photos">Upload Photos</Label>
-                <Input
+                <ForwardedInput
                   id="photos"
                   type="file"
                   accept="image/*"
@@ -137,8 +178,11 @@ export default function Component() {
                   </div>
                 </div>
               )}
-              <Button type="submit" 
-                className="w-full" disabled={photos.length === 0}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={photos.length === 0}
+              >
                 Submit Photos
               </Button>
             </form>
@@ -149,17 +193,18 @@ export default function Component() {
         </CardFooter>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Photos Uploaded Successfully</DialogTitle>
             <DialogDescription>
-              Your photos have been uploaded. Thank you for sharing your wedding memories!
+              Your photos have been uploaded. Thank you for sharing your wedding
+              memories!
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
