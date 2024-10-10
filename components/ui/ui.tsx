@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 // Button Component
 export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, ...props }) => {
@@ -32,23 +32,23 @@ export const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ c
 };
 
 // Card Component (with Header, Content, Footer)
-export const Card: React.FC = ({ children }) => {
+export const Card: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="rounded overflow-hidden shadow-lg bg-white p-6">{children}</div>;
 };
 
-export const CardHeader: React.FC = ({ children }) => {
+export const CardHeader: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="font-bold text-xl mb-4">{children}</div>;
 };
 
-export const CardTitle: React.FC = ({ children }) => {
+export const CardTitle: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <h2 className="text-2xl font-bold mb-4">{children}</h2>;
 };
 
-export const CardContent: React.FC = ({ children }) => {
+export const CardContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="text-gray-700 text-base">{children}</div>;
 };
 
-export const CardFooter: React.FC = ({ children }) => {
+export const CardFooter: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="mt-4">{children}</div>;
 };
 
@@ -58,7 +58,7 @@ export const Separator: React.FC = () => {
 };
 
 // Dialog Component (with Header, Title, Content, and Description)
-export const Dialog: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose, children }) => {
+export const Dialog: React.FC<{ isOpen: boolean; onClose: () => void; children: ReactNode }> = ({ isOpen, onClose, children }) => {
   return (
     isOpen && (
       <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -69,18 +69,18 @@ export const Dialog: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isO
   );
 };
 
-export const DialogHeader: React.FC = ({ children }) => {
+export const DialogHeader: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="text-lg font-bold mb-4">{children}</div>;
 };
 
-export const DialogTitle: React.FC = ({ children }) => {
+export const DialogTitle: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <h3 className="text-2xl font-bold mb-4">{children}</h3>;
 };
 
-export const DialogContent: React.FC = ({ children }) => {
+export const DialogContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="text-base mb-4">{children}</div>;
 };
 
-export const DialogDescription: React.FC = ({ children }) => {
+export const DialogDescription: React.FC<{ children: ReactNode }> = ({ children }) => {
   return <p className="text-gray-600 mb-4">{children}</p>;
 };
